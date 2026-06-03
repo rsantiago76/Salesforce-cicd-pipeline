@@ -1,0 +1,62 @@
+name: Validate Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'force-app/**'
+
+jobs:
+  validate:
+    name: Validate Salesforce Metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install --global @salesforce/cli
+          sf --version
+
+      - name: Authenticate to Salesforce
+        run: |
+          echo "${{ secrets.SF_AUTH_URL }}" > auth-url.txt
+          sf org login sfdx-url --sfdx-url-file auth-url.txt --alias validate-org --set-default
+          rm auth-url.txt
+
+      - name: Install PMD
+        run: |
+          PMD_VERSION=6.55.0
+          wget -q https://github.com/pmd/pmd/releases/download/pmd_releases%2F${PMD_VERSION}/pmd-bin-${PMD_VERSION}.zip
+          unzip -q pmd-bin-${PMD_VERSION}.zip
+          echo "PMD_HOME=$(pwd)/pmd-bin-${PMD_VERSION}" >> $GITHUB_ENV
+
+      - name: Run PMD Static Analysis
+        run: |
+          $PMD_HOME/bin/run.sh pmd \
+            --dir force-app/main/default/classes \
+            --rulesets pmd/ruleset.xml \
+            --format text \
+            --minimum-priority 2
+        continue-on-error: false
+
+      - name: Validate deployment (check-only)
+        run: |
+          sf project deploy start \
+            --source-dir force-app \
+            --dry-run \
+            --test-level RunLocalTests \
+            --wait 30
+
+      - name: Check Apex test coverage
+        run: |
+          sf apex run test \
+            --test-level RunLocalTests \
+            --code-coverage \
+            --result-format human \
+            --wait 10
