@@ -25,7 +25,7 @@ jobs:
 
       - name: Authenticate to Salesforce
         run: |
-          echo "${{ secrets.SF_AUTH_URL }}" > auth-url.txt
+          echo "${{ secrets.SFDX_AUTH_URL }}" > auth-url.txt
           sf org login sfdx-url --sfdx-url-file auth-url.txt --alias deploy-org --set-default
           rm auth-url.txt
 
