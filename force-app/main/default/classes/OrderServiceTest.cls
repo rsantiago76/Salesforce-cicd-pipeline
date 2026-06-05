@@ -13,8 +13,6 @@ private class OrderServiceTest {
             Status = 'Draft'
         );
         insert con;
-
-        // Activate the contract so orders can be activated
         con.Status = 'Activated';
         update con;
 
@@ -22,9 +20,30 @@ private class OrderServiceTest {
             AccountId = acc.Id,
             ContractId = con.Id,
             Status = 'Draft',
-            EffectiveDate = Date.today()
+            EffectiveDate = Date.today(),
+            Pricebook2Id = Test.getStandardPricebookId()
         );
         insert o;
+
+        // Add a product so the order can be activated
+        Product2 prod = new Product2(Name = 'Test Product', IsActive = true);
+        insert prod;
+
+        PricebookEntry pbe = new PricebookEntry(
+            Pricebook2Id = Test.getStandardPricebookId(),
+            Product2Id = prod.Id,
+            UnitPrice = 100,
+            IsActive = true
+        );
+        insert pbe;
+
+        OrderItem item = new OrderItem(
+            OrderId = o.Id,
+            PricebookEntryId = pbe.Id,
+            Quantity = 1,
+            UnitPrice = 100
+        );
+        insert item;
     }
 
     @IsTest
