@@ -39,4 +39,14 @@ private class OrderServiceTest {
         Test.stopTest();
         Assert.isTrue(count >= 0, 'Count should be non-negative');
     }
+
+    @IsTest
+    static void testActivateOrder() {
+        Order o = [SELECT Id FROM Order LIMIT 1];
+        Test.startTest();
+        OrderService.activateOrder(o.Id);
+        Test.stopTest();
+        Order updated = [SELECT Id, Status FROM Order WHERE Id = :o.Id];
+        Assert.areEqual('Activated', updated.Status, 'Order should be Activated');
+    }
 }
