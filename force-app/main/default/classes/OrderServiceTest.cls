@@ -14,6 +14,10 @@ private class OrderServiceTest {
         );
         insert con;
 
+        // Activate the contract so orders can be activated
+        con.Status = 'Activated';
+        update con;
+
         Order o = new Order(
             AccountId = acc.Id,
             ContractId = con.Id,
